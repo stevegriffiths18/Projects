@@ -1,0 +1,19 @@
+Number_Kicks = 10;
+Goalkeeper_Options = {'Left','Right','Centre'};
+goals = 0;
+saves = 0;
+
+for i = 1:Number_Kicks
+    fprintf('Penalty kick %d \n', i)
+    Kick_Direction = input('Enter direction of kick (Left, Right or Centre)','s');
+    Dive = Goalkeeper_Options{randi(3)};
+    if strcmp(Dive,Kick_Direction) == 1
+        saves = saves + 1;
+        fprintf('Save!\n')
+    else goals = goals + 1;
+        fprintf('Goal!\n')
+    
+    end 
+    fprintf('\n');
+end
+    fprintf('The total number of goals in the penalty shootout was %d and the total number of saves was %d',goals,saves)
