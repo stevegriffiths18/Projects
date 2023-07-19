@@ -1,0 +1,139 @@
+% KNN classification template edited from Udemy introduction to MATLAB course. Uses an Excel file with information on football club, ground capacity, when the club was founded and which league they are in. The classification
+% model aims to classify clubs into eithe the premier league or championship based on ground capacity and when the club was founded. Turns out it doesn't really work like that! First introduction into KNN and any machine learning.  
+
+clear all
+
+%% --------------- Importing the dataset -------------------------
+% ---------------------------- Code ---------------------------
+data = readtable('D:\MatlabCurrent\CourseNotes\CompleteCodeAndData\-- Part 3 Machine Learning for Data Science using MATLAB --\3.2 Classification\K-Nearest Neighbor\ChampOrPrem.csv');
+
+
+
+%________________________________________________________________
+%________________________________________________________________
+
+%%---------------Data Preprocessing -----------------------------
+
+
+%% -------------- Feature Scalling -------------------------------
+
+% -------------- Method 1: Standardization ----------------------
+% ---------------------------- Code -----------------------------
+
+stand_Capacity = (data.Capacity - mean(data.Capacity))/std(data.Capacity);
+data.Capacity = stand_Capacity; 
+
+stand_Founded = (data.Founded - mean(data.Founded))/std(data.Founded);
+data.Founded = stand_Founded; 
+
+ 
+%________________________________________________________________
+%________________________________________________________________
+
+%%%%---------------Classifying Data  -----------------------------
+%% -------------- Building Classifier ----------------------------
+% ---------------------------- Code ---------------------------
+
+
+classification_model = fitcknn(data,'League~Capacity+Founded');
+%please define your classifier here
+
+%% -------------- Test and Train sets ----------------------------
+% ---------------------------- Code ---------------------------
+
+cv = cvpartition(classification_model.NumObservations, 'HoldOut', 0.2);
+cross_validated_model = crossval(classification_model,'cvpartition',cv); 
+
+
+
+
+%% -------------- Making Predictions for Test sets ---------------
+% ---------------------------- Code ---------------------------
+
+Predictions = predict(cross_validated_model.Trained{1},data(test(cv),1:end-1));
+
+
+
+%% -------------- Analyzing the predictions ---------------------
+% ---------------------------- Code ---------------------------
+
+Results = confusionmat(cross_validated_model.Y(test(cv)),Predictions);
+
+
+
+
+% -------------- Visualizing training set results --------------
+%  ---------------------------- Code ---------------------------
+ 
+labels = unique(data.League);
+classifier_name = 'K-Nearest Neigbor (Training Results)';
+ % please mention your classifier name here
+
+Capacity_range = min(data.Capacity(training(cv)))-1:0.01:max(data.Capacity(training(cv)))+1;
+Founded_range = min(data.Founded(training(cv)))-1:0.01:max(data.Founded(training(cv)))+1;
+
+[xx1, xx2] = meshgrid(Capacity_range,Founded_range);
+XGrid = [xx1(:) xx2(:)];
+ 
+predictions_meshgrid = predict(cross_validated_model.Trained{1},XGrid);
+ 
+gscatter(xx1(:), xx2(:), predictions_meshgrid,'rgb');
+ 
+hold on
+ 
+training_data = data(training(cv),:);
+Y = ismember(training_data.League,labels{1});
+ 
+ 
+scatter(training_data.Capacity(Y),training_data.Founded(Y), 'o' , 'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'red');
+scatter(training_data.Capacity(~Y),training_data.Founded(~Y) , 'o' , 'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'green');
+ 
+ 
+xlabel('Capacity');
+ylabel('Founded');
+ 
+title(classifier_name);
+legend off, axis tight
+ 
+legend(labels,'Location',[0.45,0.01,0.45,0.05],'Orientation','Horizontal');
+ 
+ 
+ 
+%% -------------- Visualizing testing set results ----------------
+% ---------------------------- Code ---------------------------
+ 
+labels = unique(data.League);
+classifier_name = 'K-Nearest Neigbor (Testing Results)';
+ % please mention your classifier name here
+
+Capacity_range = min(data.Capacity(training(cv)))-1:0.01:max(data.Capacity(training(cv)))+1;
+Founded_range = min(data.Founded(training(cv)))-1:0.01:max(data.Founded(training(cv)))+1;
+
+[xx1, xx2] = meshgrid(Capacity_range,Founded_range);
+XGrid = [xx1(:) xx2(:)];
+
+predictions_meshgrid = predict(cross_validated_model.Trained{1},XGrid);
+
+figure
+
+gscatter(xx1(:), xx2(:), predictions_meshgrid,'rgb');
+
+hold on
+
+testing_data =  data(test(cv),:);
+Y = ismember(testing_data.League,labels{1});
+ 
+scatter(testing_data.Capacity(Y),testing_data.Founded(Y), 'o' , 'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'red');
+scatter(testing_data.Capacity(~Y),testing_data.Founded(~Y) , 'o' , 'MarkerEdgeColor', 'black', 'MarkerFaceColor', 'green');
+
+
+xlabel('Capacity');
+ylabel('Founded');
+
+title(classifier_name);
+legend off, axis tight
+
+% legend(labels,'Location',[0.45,0.01,0.45,0.05],'Orientation','Horizontal');
+ 
+%________________________________________________________________
+%________________________________________________________________
